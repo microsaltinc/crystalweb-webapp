@@ -1,0 +1,109 @@
+name: Test, publish and deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.41.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: python3 scripts/audit-no-aws.py
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub
+      - name: Browser upload, filter and assignment tests
+        run: >-
+          flutter test --no-pub --platform chrome
+          test/features/batches/campaign_assignment_dialog_test.dart
+          test/features/batches/campaign_ownership_section_test.dart
+          test/features/microscope_upload/microscope_file_source_web_test.dart
+          test/features/rnd/rnd_experiment_filter_web_test.dart
+      - run: python3 -m unittest discover -s scripts/tests -v
+      - run: shellcheck scripts/*.sh
+
+  build:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        id: image
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: ${{ vars.DOCKER_PLATFORMS || 'linux/amd64' }}
+          tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            APP_ENV=production
+            SOURCE_REVISION=${{ github.sha }}
+            API_URL=${{ vars.API_PUBLIC_URL || 'https://api.example.invalid' }}
+            LOCAL_AUTH_ENABLED=false
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Deploy this repository only
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}@${{ needs.build.outputs.digest }}
+          SOURCE_REVISION: ${{ github.sha }}
+          DEPLOYMENT_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+          VPS_PATH: ${{ vars.VPS_PATH }}
+          SERVICE_PORT: ${{ vars.SERVICE_PORT }}
+          API_PUBLIC_URL: ${{ vars.API_PUBLIC_URL }}
+          WEBAPP_PUBLIC_URL: ${{ vars.WEBAPP_PUBLIC_URL }}
+
+        run: ./scripts/deploy-vps.sh

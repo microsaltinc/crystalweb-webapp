@@ -1,0 +1,4 @@
+services:
+  webapp:
+    image: ${WEB_IMAGE:?set an immutable WEB_IMAGE digest}
+    build: !reset null

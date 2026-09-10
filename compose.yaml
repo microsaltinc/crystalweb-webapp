@@ -1,0 +1,41 @@
+name: crystalweb-webapp
+services:
+  webapp:
+    image: crystalweb-webapp:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        API_URL: ${API_PUBLIC_URL:-http://localhost:8081}
+        APP_ENV: ${APP_ENV:-local}
+        LOCAL_AUTH_ENABLED: ${LOCAL_AUTH_ENABLED:-false}
+        SOURCE_REVISION: ${SOURCE_REVISION:-uncommitted}
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+    init: true
+    ports:
+    - 127.0.0.1:${WEB_PORT:-3000}:8080
+    healthcheck:
+      test:
+      - CMD
+      - wget
+      - --quiet
+      - --output-document=/dev/null
+      - http://127.0.0.1:8080/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    read_only: true
+    tmpfs:
+    - /tmp:size=32m,mode=1777
+    - /var/cache/nginx:size=32m,mode=0755
+    - /var/run:size=4m,mode=0755
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true

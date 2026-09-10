@@ -1,0 +1,216 @@
+{
+  "source_repository": "https://github.com/microsaltinc/crystalApp.git",
+  "source_revision": "3b9c0f446206ca26d95610cae800b40192178e12",
+  "adaptations": {
+    "frontend/lib/core/auth/auth_provider.dart": {
+      "target": "lib/core/auth/auth_provider.dart",
+      "source_blob": "d172e00afcc30654567e7276b5ddc0b32da307b8",
+      "target_blob": "9e73d17f97a50a3dc11fbb9a2a8f393e421c4883",
+      "reason": "Wires explicit local bootstrap gate into browser SAML authentication."
+    },
+    "frontend/lib/core/auth/auth_service.dart": {
+      "target": "lib/core/auth/auth_service.dart",
+      "source_blob": "73111d4e0d76ca86775eae5800330296ed9176b9",
+      "target_blob": "346b9b1c6b7ee496db378573d463e5e1deab5d04",
+      "reason": "Browser SAML callback/session flow with opt-in local bootstrap; native deep links and OAuth omitted."
+    },
+    "frontend/lib/core/config/app_config.dart": {
+      "target": "lib/core/config/app_config.dart",
+      "source_blob": "fefe87ac3f03be51e833af5b0b3f876d145a523d",
+      "target_blob": "69a685afd6ff541d9b18181c89f7897e955f84fd",
+      "reason": "Requires an explicit API origin and HTTPS in production; prevents local traffic falling back to the source deployment."
+    },
+    "frontend/lib/core/config/env.dart": {
+      "target": "lib/core/config/env.dart",
+      "source_blob": "688ebf381b239ebe03ca6e8c545a98031cebf1b6",
+      "target_blob": "037af0dc56089d8e1e487667c854872f0e52c467",
+      "reason": "Unknown environment values fail closed."
+    },
+    "frontend/lib/core/routing/app_router.dart": {
+      "target": "lib/core/routing/app_router.dart",
+      "source_blob": "e0aacab432b8c71bed4bcb6b66ed2f605f6e12ec",
+      "target_blob": "df6ce13c1e80ae9016cdd5b11a1d871eb1fd1026",
+      "reason": "Same browser feature routes; native folder-manager route replaced by campaign creation/structure."
+    },
+    "frontend/lib/core/routing/route_names.dart": {
+      "target": "lib/core/routing/route_names.dart",
+      "source_blob": "ffd08b8e40549c694f86b37e45e34035be8e32e9",
+      "target_blob": "4453f1ffebd36b13cb3e5706c9a7b291ceba09e1",
+      "reason": "Native folder-manager route omitted; browser campaign creation and structure serve its domain workflow."
+    },
+    "frontend/lib/features/auth/screens/auth_callback_screen.dart": {
+      "target": "lib/features/auth/screens/auth_callback_screen.dart",
+      "source_blob": "31db52faaaf79f0183847459312971a558df6118",
+      "target_blob": "19991e85f37caffac8094832fad7a30db9e6c93b",
+      "reason": "Consumes browser callback without native deep-link completer."
+    },
+    "frontend/lib/features/auth/widgets/google_sign_in_button.dart": {
+      "target": null,
+      "source_blob": "0662f211c3d571287717117b15c6bdd0ec51a16c",
+      "target_blob": null,
+      "reason": "Unused OAuth button omitted; login screen provides SAML sign-in."
+    },
+    "frontend/lib/features/batches/screens/batch_list_screen.dart": {
+      "target": "lib/features/batches/screens/batch_list_screen.dart",
+      "source_blob": "30d69e7d8585da546785c536f268103b27ed1658",
+      "target_blob": "c90a5fa267aed6077164ebbfeaa171bdc832f708",
+      "reason": "Always uses browser campaign creation instead of a native folder-manager branch."
+    },
+    "frontend/lib/features/batches/services/batch_download_service.dart": {
+      "target": "lib/features/batches/services/batch_download_service.dart",
+      "source_blob": "355fc7cbf36495d95b949ba55bbc63016533a965",
+      "target_blob": "0432bb515dc1a5a552e36aac18a75cdc7a659f4b",
+      "reason": "Authenticated browser ZIP download; native file dialogs and filesystem APIs omitted."
+    },
+    "frontend/lib/features/batches/widgets/campaign_create_dialog.dart": {
+      "target": "lib/features/batches/widgets/campaign_create_dialog.dart",
+      "source_blob": "297c489fa40f4490b0602030928c51ef4d4d3cd4",
+      "target_blob": "f883b6d583c1131dda707c3373e7c02191badf95",
+      "reason": "Imports the relocated, unchanged lot-code model."
+    },
+    "frontend/lib/features/batches/widgets/campaign_ownership_section.dart": {
+      "target": "lib/features/batches/widgets/campaign_ownership_section.dart",
+      "source_blob": "4d011591f10e258083eb6e38f56caea213a89723",
+      "target_blob": "068b38b8f3aed368daece21ef8e217f571608ded",
+      "reason": "Latest assignment/reassignment UI with BuildContext lifetime checks after asynchronous dialogs."
+    },
+    "frontend/lib/features/batches/widgets/campaign_registration_conflicts_section.dart": {
+      "target": "lib/features/batches/widgets/campaign_registration_conflicts_section.dart",
+      "source_blob": "03f942cdaeb7c242ed7a00f7d7e8642cc8bc50a1",
+      "target_blob": "f10d277a75f78387193f4e30a2d52590f571b73c",
+      "reason": "Displays logical storage identifiers without a cloud URI scheme."
+    },
+    "frontend/lib/features/batches/widgets/campaign_structure_section.dart": {
+      "target": "lib/features/batches/widgets/campaign_structure_section.dart",
+      "source_blob": "b625b830bc866caa7110b9914cdbf0962c4b4951",
+      "target_blob": "23655448974d8326334fbbd735e431951ba48af9",
+      "reason": "Browser upload actions always available; source files stay immutable on mounted storage."
+    },
+    "frontend/lib/features/folders/models/folder_operation.dart": {
+      "target": null,
+      "source_blob": "1ee72c6defce47a5392f62f869bd6e25cc2e0662",
+      "target_blob": null,
+      "reason": "Native filesystem folder workflow replaced by browser campaign, Sublot/Bag creation and direct TIFF/TXT uploads; server folder-operation API remains compatible."
+    },
+    "frontend/lib/features/folders/models/lot_code.dart": {
+      "target": "lib/features/batches/models/lot_code.dart",
+      "source_blob": "e40d19649849cf96078b1ac72334831cd2df4084",
+      "target_blob": "da79736ce0c8e8310e98fb33541ec9e04c2fcfd5",
+      "reason": "Unchanged lot-code rules relocated to browser campaign creation."
+    },
+    "frontend/lib/features/folders/screens/folder_creator_screen.dart": {
+      "target": null,
+      "source_blob": "1e9292b5e57dc316dd91fc9b312942b64af0c523",
+      "target_blob": null,
+      "reason": "Native filesystem folder workflow replaced by browser campaign, Sublot/Bag creation and direct TIFF/TXT uploads; server folder-operation API remains compatible."
+    },
+    "frontend/lib/features/folders/services/folder_operation_service.dart": {
+      "target": null,
+      "source_blob": "6ac6a757358908bd77daccfbb9df3f26a0750723",
+      "target_blob": null,
+      "reason": "Native filesystem folder workflow replaced by browser campaign, Sublot/Bag creation and direct TIFF/TXT uploads; server folder-operation API remains compatible."
+    },
+    "frontend/lib/features/microscope_upload/models/microscope_upload_feedback.dart": {
+      "target": "lib/features/microscope_upload/models/microscope_upload_feedback.dart",
+      "source_blob": "997f06f53ef42d0ffb0a5dedfc5f4e0d9dd6a6bf",
+      "target_blob": "963a9c688873c2a3886c6758c2f671a93fd4f4f0",
+      "reason": "Provider-neutral feedback redaction; removes cloud-specific header token."
+    },
+    "frontend/lib/features/microscope_upload/providers/microscope_upload_provider.dart": {
+      "target": "lib/features/microscope_upload/providers/microscope_upload_provider.dart",
+      "source_blob": "12edc20e4944fb12bc9fe534123dfe60d53bc029",
+      "target_blob": "eef78e1927a02a953444d82a99113a853be748c4",
+      "reason": "Same resumable browser workflow with local checksum receipt headers and browser-safe HTTP headers; native single-PUT fallback omitted."
+    },
+    "frontend/lib/features/microscope_upload/services/microscope_file_source.dart": {
+      "target": "lib/features/microscope_upload/services/microscope_file_source.dart",
+      "source_blob": "e5a97e102df269c9185873c235d9abd2334ab995",
+      "target_blob": "314872ec911592ca7a6daa779aed1487d1f6ab8c",
+      "reason": "Browser file picker selected without native IO implementation."
+    },
+    "frontend/lib/features/microscope_upload/services/microscope_file_source_io.dart": {
+      "target": null,
+      "source_blob": "54bd21f880590fdcb4b05b9a45fdf2ab62583601",
+      "target_blob": null,
+      "reason": "Native filesystem picker omitted; browser File API supplies TIFF/TXT data."
+    },
+    "frontend/lib/features/microscope_upload/services/microscope_file_source_stub.dart": {
+      "target": "lib/features/microscope_upload/services/microscope_file_source_stub.dart",
+      "source_blob": "c59884c951bb41e4b6c04f751a4911f778bd3c3c",
+      "target_blob": "a327191630f7877f47b30a4d4caa4da1277058e5",
+      "reason": "Non-browser test stub remains for web-only file source."
+    },
+    "frontend/lib/features/reports/screens/pdf_viewer_screen.dart": {
+      "target": "lib/features/reports/screens/pdf_viewer_screen.dart",
+      "source_blob": "b514afa1b5514c0aa1354bb8e3e50560b816b1c6",
+      "target_blob": "2915f4851d045954a7b7067bcdd9dcfb8b928d7c",
+      "reason": "Browser PDF viewer and downloads without native save/share branches."
+    },
+    "frontend/lib/features/reports/services/report_download_service.dart": {
+      "target": "lib/features/reports/services/report_download_service.dart",
+      "source_blob": "0e537477dbcf2f01b9ec45b5e404c6dd8a735143",
+      "target_blob": "205afbf061b5d973dd95d07bc09bdc35418ec397",
+      "reason": "Browser PDF/CSV download without native filesystem/share dependencies."
+    },
+    "frontend/lib/features/reports/widgets/report_section.dart": {
+      "target": "lib/features/reports/widgets/report_section.dart",
+      "source_blob": "42a7c995092046e4785b9ada9cd99b1338d77aef",
+      "target_blob": "bf20c7029e107582f26135ef0604eceffebd6d89",
+      "reason": "Uses the browser-only const download service; report controls unchanged."
+    },
+    "frontend/lib/features/rnd/screens/rnd_batch_list_screen.dart": {
+      "target": "lib/features/rnd/screens/rnd_batch_list_screen.dart",
+      "source_blob": "ba8266163fb9cedd73731d25af1c74ad308a8f6c",
+      "target_blob": "61e081d238fddc2a9e8ae8acec4276976fb43970",
+      "reason": "Always exposes browser experiment creation and retains all filters."
+    },
+    "frontend/lib/features/settings/providers/campaign_workflow_settings_provider.dart": {
+      "target": null,
+      "source_blob": "aa252aefca66d4ebe9e4122c23f01e96b085661b",
+      "target_blob": null,
+      "reason": "Unused draft provider omitted; active workflow settings dialog manages its own draft and has widget coverage."
+    },
+    "frontend/lib/features/settings/providers/settings_provider.dart": {
+      "target": null,
+      "source_blob": "7f71953631ed5ba577ca752502bbee5b5a75d322",
+      "target_blob": null,
+      "reason": "Native per-device microscope folder paths replaced by server-managed destinations and browser uploads."
+    },
+    "frontend/lib/features/settings/screens/settings_screen.dart": {
+      "target": "lib/features/settings/screens/settings_screen.dart",
+      "source_blob": "2c0fe7f5ee3265b5683939b3f3a41bcef995c067",
+      "target_blob": "c3bffeb8c59b60b8a29889f2f9c12b895f96bf9a",
+      "reason": "Retains workflow, threshold, connection, account, logout and version controls; explains browser uploads instead of native folder preferences."
+    },
+    "frontend/lib/features/shell/screens/app_shell.dart": {
+      "target": "lib/features/shell/screens/app_shell.dart",
+      "source_blob": "aa7069aed71cc77522aeec32fdd4b818b5238f54",
+      "target_blob": "f389ea955101711b8ccd210bfa2dd743c477a75d",
+      "reason": "Browser navigation omits only the native folder tab."
+    },
+    "frontend/lib/main.dart": {
+      "target": "lib/main.dart",
+      "source_blob": "a9b32283cb8a4977aba6987ddba512df5e50a8b2",
+      "target_blob": "511c6a676296a35a0bf5597f70a7c40742c16f79",
+      "reason": "Browser callback capture and session restoration without mobile/desktop deep-link plugins."
+    },
+    "frontend/lib/platform/platform_info.dart": {
+      "target": null,
+      "source_blob": "52a4124cd7f6407d84c7c860823196460cb2149d",
+      "target_blob": null,
+      "reason": "Native platform branching is removed from the web-only client."
+    },
+    "frontend/pubspec.yaml": {
+      "target": "pubspec.yaml",
+      "source_blob": "a7ffd0f8e7a9cf342a93a30f3b5b4e1e0997061b",
+      "target_blob": "87223148d46d9ebaa363b780d320bff6121c6ea1",
+      "reason": "Tracks upstream app version while removing native-only dependencies."
+    },
+    "frontend/web/index.html": {
+      "target": "web/index.html",
+      "source_blob": "bc8a188c7dddb51c8c3afbbd383e7d5effb45075",
+      "target_blob": "72f67ec4d0fcf4570e24c98186937d36d8d8a1e7",
+      "reason": "Loads the vendored pdf.js runtime, worker and character maps from the same origin."
+    }
+  }
+}
