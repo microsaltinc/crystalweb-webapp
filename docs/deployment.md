@@ -73,6 +73,13 @@ Its health endpoint is `/healthz`. Deployment verifies the image's embedded API
 origin matches `API_PUBLIC_URL` before replacing the `crystalweb-webapp` project.
 The backend containers and database are never restarted by this workflow.
 
+## Backend storage and database
+
+The backend connects to provider-managed PostgreSQL 16. Microscope files and
+reports live on a dedicated mounted filesystem on the API VPS. The webapp needs
+no database credentials or image-volume access. See the backend repository's
+[storage architecture](https://github.com/microsaltinc/crystalweb-backend/blob/main/docs/storage.md).
+
 ## Authentication
 
 Configure the Google Workspace SAML application against the API domain:
@@ -108,7 +115,8 @@ production Compose configuration. Verify its embedded API origin and compatibili
 with the currently deployed API. No database rollback is involved.
 
 To move a service to a different VPS, provision its new host, update that
-repository's SSH settings, and move its DNS. For the backend, migrate PostgreSQL
-and filesystem storage together. If the API origin changes, rebuild the webapp
+repository's SSH settings, and move its DNS. The backend uses a dedicated provider-managed PostgreSQL 16 service and a mounted
+image volume. Moving its VPS requires remounting/migrating images and authorizing
+the new VPS on the managed database network. Preserve coordinated recovery points. If the API origin changes, rebuild the webapp
 with the new `API_PUBLIC_URL`, and update backend CORS/SAML settings if the webapp
 origin changes. No cross-repository checkout or Docker network changes are needed.
