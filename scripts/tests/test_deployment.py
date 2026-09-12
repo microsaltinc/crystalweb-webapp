@@ -48,6 +48,45 @@ class DeploymentBundleTests(unittest.TestCase):
         else:
             self.assertFalse((self.destination / ".secrets").exists())
 
+    def test_ssh_transfer_preserves_container_readable_files_and_private_secrets(self):
+        import subprocess
+
+        binaries = Path(self.temporary.name) / "bin"
+        binaries.mkdir()
+        ssh = binaries / "ssh"
+        ssh.write_text(
+            '#!/usr/bin/env python3\n'
+            'import subprocess, sys\n'
+            'command = sys.argv[-1]\n'
+            'if "activate-release.sh" in command:\n'
+            '    sys.stdin.buffer.read()  # Do not activate services in this transport test.\n'
+            'else:\n'
+            '    sys.exit(subprocess.run(["bash", "-c", command], stdin=sys.stdin).returncode)\n'
+        )
+        ssh.chmod(0o755)
+        curl = binaries / "curl"
+        curl.write_text("#!/bin/sh\nexit 0\n")
+        curl.chmod(0o755)
+        service_root = Path(self.temporary.name) / "service"
+        env = os.environ | self.values | {
+            "VPS_PATH": str(service_root),
+            "PATH": f"{binaries}:{os.environ['PATH']}",
+        }
+        result = subprocess.run(
+            ["bash", str(ROOT / "scripts/deploy-vps.sh")],
+            env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        release = service_root / "releases" / self.values["DEPLOYMENT_ID"]
+        self.assertEqual(release.stat().st_mode & 0o777, 0o700)
+        self.assertEqual((release / ".env").stat().st_mode & 0o777, 0o600)
+        self.assertEqual((release / "scripts/rootless-docker.sh").stat().st_mode & 0o777, 0o755)
+        if deploy.SERVICE.endswith("backend"):
+            self.assertEqual((release / "docker/nginx.conf").stat().st_mode & 0o777, 0o644)
+            self.assertEqual((release / "scripts/runtime_manifest.py").stat().st_mode & 0o444, 0o444)
+            self.assertEqual((release / ".secrets").stat().st_mode & 0o777, 0o700)
+            self.assertEqual((release / ".secrets/db_password").stat().st_mode & 0o777, 0o600)
+
     def test_rejects_shell_injection_and_invalid_public_configuration(self):
         for name, value in (
             ("VPS_PATH", "/srv/app;touch /tmp/injected"),

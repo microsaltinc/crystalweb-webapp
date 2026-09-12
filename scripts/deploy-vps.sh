@@ -21,8 +21,9 @@ destination="$VPS_USER@$VPS_HOST"
 release="$VPS_PATH/releases/$DEPLOYMENT_ID"
 # Paths, user, host, revision and registry username were validated before interpolation.
 tar -C "$temporary/bundle" -czf "$temporary/bundle.tar.gz" .
+# Preserve reviewed file modes for container readers; the release and secrets stay private.
 ssh "${ssh_options[@]}" "$destination" \
-  "set -eu; umask 077; mkdir -p '$VPS_PATH/releases'; mkdir '$release'; chmod 700 '$VPS_PATH' '$release'; tar -xzf - -C '$release'" \
+  "set -eu; umask 077; mkdir -p '$VPS_PATH/releases'; mkdir '$release'; chmod 700 '$VPS_PATH' '$release'; tar -xzpf - -C '$release'" \
   < "$temporary/bundle.tar.gz"
 printf '%s' "$GHCR_TOKEN" | ssh "${ssh_options[@]}" "$destination" \
   "bash '$release/scripts/activate-release.sh' '$VPS_PATH' '$GHCR_USER'"
