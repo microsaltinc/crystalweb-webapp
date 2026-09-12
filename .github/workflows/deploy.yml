@@ -4,13 +4,14 @@ on:
   pull_request:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ startsWith(github.ref, 'refs/tags/') && 'production' || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -40,8 +41,39 @@ jobs:
       - run: python3 -m unittest discover -s scripts/tests -v
       - run: shellcheck scripts/*.sh
 
-  build:
+  configure:
     needs: test
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'development' }}
+    outputs:
+      environment: ${{ steps.config.outputs.environment }}
+      deploy_enabled: ${{ steps.config.outputs.deploy_enabled }}
+      api_public_url: ${{ steps.config.outputs.api_public_url }}
+      docker_platforms: ${{ steps.config.outputs.docker_platforms }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Resolve configuration from the selected environment
+        id: config
+        env:
+          DEPLOY_ENABLED: ${{ vars.DEPLOY_ENABLED }}
+          API_PUBLIC_URL: ${{ vars.API_PUBLIC_URL }}
+          WEBAPP_PUBLIC_URL: ${{ vars.WEBAPP_PUBLIC_URL }}
+          DOCKER_PLATFORMS: ${{ vars.DOCKER_PLATFORMS }}
+        run: python3 scripts/deployment-config.py
+
+  build:
+    needs: [test, configure]
+    # PRs build without entering an environment; a failed configuration blocks releases.
+    if: >-
+      !cancelled() && needs.test.result == 'success' &&
+      (needs.configure.result == 'success' || needs.configure.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -56,7 +88,7 @@ jobs:
       - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        if: github.event_name != 'pull_request'
+        if: needs.configure.result == 'success'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -65,23 +97,23 @@ jobs:
         id: image
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          platforms: ${{ vars.DOCKER_PLATFORMS || 'linux/amd64' }}
-          tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          push: ${{ needs.configure.result == 'success' }}
+          platforms: ${{ needs.configure.outputs.docker_platforms || 'linux/amd64' }}
+          tags: ghcr.io/${{ github.repository }}:${{ needs.configure.outputs.environment || 'ci' }}-sha-${{ github.sha }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             APP_ENV=production
             SOURCE_REVISION=${{ github.sha }}
-            API_URL=${{ vars.API_PUBLIC_URL || 'https://api.example.invalid' }}
+            API_URL=${{ needs.configure.outputs.api_public_url || 'https://api.example.invalid' }}
             LOCAL_AUTH_ENABLED=false
   deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    needs: [build, configure]
+    if: needs.configure.outputs.deploy_enabled == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
-    environment: production
+    environment: ${{ needs.configure.outputs.environment }}
     permissions:
       contents: read
       packages: read
@@ -94,6 +126,7 @@ jobs:
           IMAGE: ghcr.io/${{ github.repository }}@${{ needs.build.outputs.digest }}
           SOURCE_REVISION: ${{ github.sha }}
           DEPLOYMENT_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          DEPLOYMENT_ENVIRONMENT: ${{ needs.configure.outputs.environment }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VPS_HOST: ${{ secrets.VPS_HOST }}

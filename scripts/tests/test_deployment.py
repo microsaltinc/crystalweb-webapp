@@ -48,6 +48,17 @@ class DeploymentBundleTests(unittest.TestCase):
         else:
             self.assertFalse((self.destination / ".secrets").exists())
 
+    def test_hosted_development_preserves_production_security_settings(self):
+        with patch.dict(os.environ, self.values | {"DEPLOYMENT_ENVIRONMENT": "development"}, clear=True):
+            deploy.prepare(self.destination)
+        config = (self.destination / ".env").read_text()
+        self.assertIn("DEPLOYMENT_ENVIRONMENT=development", config)
+        self.assertIn("APP_ENV=production", config)
+        self.assertIn("LOCAL_AUTH_ENABLED=false", config)
+        if deploy.SERVICE.endswith("backend"):
+            self.assertIn("ENVIRONMENT=production", config)
+            self.assertIn("DB_SSLMODE=verify-full", config)
+
     def test_ssh_transfer_preserves_container_readable_files_and_private_secrets(self):
         import subprocess
 
@@ -89,6 +100,7 @@ class DeploymentBundleTests(unittest.TestCase):
 
     def test_rejects_shell_injection_and_invalid_public_configuration(self):
         for name, value in (
+            ("DEPLOYMENT_ENVIRONMENT", "local"),
             ("VPS_PATH", "/srv/app;touch /tmp/injected"),
             ("VPS_PATH", "/"),
             ("VPS_HOST", "host;command"),

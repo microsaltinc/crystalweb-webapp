@@ -62,8 +62,11 @@ Neither CI nor deployment needs that checkout.
 ## Deploy
 
 [Deployment guide](docs/deployment.md) lists GitHub secrets and variables, VPS
-setup and host TLS configuration. Main pushes test, build and publish this
-repository's image. `DEPLOY_ENABLED=true` enables independent VPS deployment.
+setup and host TLS configuration. Main pushes target the development VPS; manually
+created `vMAJOR.MINOR.PATCH` tags release production on its separate VPS. Each
+environment has its own settings and `DEPLOY_ENABLED` switch. The selected
+environment's API origin is embedded in its image. Hosted development retains
+the production security settings.
 The server defaults to loopback port 3000, with `/healthz` for readiness.
 
 Analyzer/retrainer execution remains deferred on the backend. New uploads do not

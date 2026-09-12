@@ -50,6 +50,7 @@ def prepare(destination):
     for name in ("VPS_SSH_KEY", "VPS_KNOWN_HOSTS", "GHCR_TOKEN"):
         required(name)
     values = {
+        "DEPLOYMENT_ENVIRONMENT": match("DEPLOYMENT_ENVIRONMENT", r"development|production", "production"),
         "APP_ENV": "production", "LOCAL_AUTH_ENABLED": "false",
         "API_PUBLIC_URL": origin("API_PUBLIC_URL"),
         "WEBAPP_PUBLIC_URL": origin("WEBAPP_PUBLIC_URL"),
