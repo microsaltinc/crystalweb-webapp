@@ -16,6 +16,9 @@ registry_config=$(mktemp -d)
 export DOCKER_CONFIG="$registry_config"
 cleanup() { rm -rf "$registry_config" "$release/.secrets"; }
 trap cleanup EXIT
+# shellcheck source=scripts/rootless-docker.sh
+. ./scripts/rootless-docker.sh
+crystalweb_require_rootless_docker
 docker login ghcr.io --username "$registry_user" --password-stdin > /dev/null
 compose=(docker compose --project-name "$SERVICE" --env-file "$release/.env"
   -f "$release/compose.yaml" -f "$release/compose.production.yaml")

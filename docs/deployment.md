@@ -12,7 +12,7 @@ there (repository secrets with the same names also work):
 | Secret | Value |
 | --- | --- |
 | `VPS_HOST` | Deployment host DNS name or IP address, without a URL scheme |
-| `VPS_USER` | SSH deployment account with Docker permission |
+| `VPS_USER` | Dedicated rootless Docker account; `cicd-webapp` on the current VPS |
 | `VPS_SSH_KEY` | Complete dedicated SSH private key, usable without a passphrase; install its public key in that account's authorized_keys |
 | `VPS_KNOWN_HOSTS` | Verified SSH known_hosts line(s) for this host; use `[host]:port` for a nondefault SSH port |
 
@@ -47,10 +47,12 @@ can be built before configuration, but deployment rejects placeholder origins.
 
 ## Provision the VPS
 
-Use a Linux VPS with Docker Engine, Docker Compose **2.24.4 or later**, bash,
-Python 3, curl and `flock` (util-linux). Install host nginx and provision trusted
-TLS certificates for the public domains. Grant the deployment user Docker access
-and ownership of its service directory. For example, after creating the account:
+Use a Linux VPS with rootless Docker Engine, Docker Compose **2.24.4 or later**,
+bash, Python 3, curl and `flock` (util-linux). Follow
+[rootless account provisioning](rootless-deployment.md). An administrator installs
+host nginx and provisions trusted TLS certificates and the release directory.
+Use a dedicated frontend account and SSH key, separate from the backend, with no
+sudo or privileged Docker-group membership. After creating the account:
 
 ```sh
 sudo install -d -m 0700 -o DEPLOY_USER -g DEPLOY_GROUP /srv/crystalweb-webapp
@@ -58,8 +60,8 @@ sudo install -d -m 0700 -o DEPLOY_USER -g DEPLOY_GROUP /srv/crystalweb-webapp
 
 Replace the uppercase account/group placeholders. On one VPS, provision both
 `/srv/crystalweb-backend` and `/srv/crystalweb-webapp`; use different paths and
-ports. Each workflow only operates on its own Compose project. Docker permission
-is a privileged host capability, so use an account intended for deployment.
+ports, separate owners and separate rootless daemons. Each workflow only operates
+on its account's containers. Production activation rejects rootful Docker.
 
 Install the example `deploy/host-nginx.conf.example` in the host nginx http
 configuration, replacing domains and certificate paths. Match its proxy port to

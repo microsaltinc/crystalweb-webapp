@@ -34,7 +34,8 @@ def origin(name):
 
 def prepare(destination):
     match("VPS_HOST", r"[A-Za-z0-9][A-Za-z0-9.:-]*")
-    match("VPS_USER", r"[a-z_][a-z0-9_-]*")
+    if match("VPS_USER", r"[a-z_][a-z0-9_-]*") == "root":
+        raise ValueError("VPS_USER must be an unprivileged deployment account")
     match("GHCR_USER", r"[A-Za-z0-9_-]+")
     for name, default in (("VPS_PORT", "22"), ("SERVICE_PORT", "8081" if SERVICE.endswith("backend") else "3000")):
         value = int(match(name, r"[0-9]+", default))
@@ -59,6 +60,7 @@ def prepare(destination):
     values.update({"WEB_IMAGE": image, "WEB_PORT": os.environ.get("SERVICE_PORT") or "3000"})
     (destination / "scripts").mkdir()
     shutil.copy2(ROOT / "scripts/activate-release.sh", destination / "scripts/activate-release.sh")
+    shutil.copy2(ROOT / "scripts/rootless-docker.sh", destination / "scripts/rootless-docker.sh")
     for filename in ("compose.yaml", "compose.production.yaml"):
         shutil.copy2(ROOT / filename, destination / filename)
     # Values above are constrained to shell-safe/Compose-safe ASCII, never secret values.

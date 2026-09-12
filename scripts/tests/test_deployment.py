@@ -41,6 +41,7 @@ class DeploymentBundleTests(unittest.TestCase):
         for name in ("api", "core", "lib", ".git", "tests", ".venv"):
             self.assertFalse((self.destination / name).exists())
         self.assertEqual(self.destination.stat().st_mode & 0o777, 0o700)
+        self.assertTrue((self.destination / "scripts/rootless-docker.sh").is_file())
         if deploy.SERVICE.endswith("backend"):
             self.assertEqual((self.destination / ".secrets/db_password").stat().st_mode & 0o777, 0o600)
             self.assertTrue((self.destination / "scripts/backup.sh").is_file())
@@ -53,6 +54,7 @@ class DeploymentBundleTests(unittest.TestCase):
             ("VPS_PATH", "/"),
             ("VPS_HOST", "host;command"),
             ("VPS_USER", "root$(id)"),
+            ("VPS_USER", "root"),
             ("SOURCE_REVISION", "main"),
             ("DEPLOYMENT_ID", "main"),
             ("IMAGE", f"ghcr.io/microsaltinc/{deploy.SERVICE}:latest"),
