@@ -43,6 +43,7 @@ signing key or other runtime secret belongs in Flutter defines or client assets.
 ```sh
 python3 scripts/audit-no-aws.py
 python3 -m unittest discover -s scripts/tests -v
+python3 scripts/test-static-http.py
 flutter analyze
 flutter test
 flutter test --platform chrome test/features/batches/campaign_assignment_dialog_test.dart test/features/batches/campaign_ownership_section_test.dart test/features/microscope_upload/microscope_file_source_web_test.dart test/features/rnd/rnd_experiment_filter_web_test.dart
