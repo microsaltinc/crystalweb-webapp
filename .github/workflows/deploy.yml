@@ -140,6 +140,7 @@ jobs:
           VPS_PORT: ${{ vars.VPS_PORT || '22' }}
           VPS_PATH: ${{ vars.VPS_PATH }}
           SERVICE_PORT: ${{ vars.SERVICE_PORT }}
+          VERIFY_PUBLIC_DNS: ${{ vars.VERIFY_PUBLIC_DNS || 'true' }}
           API_PUBLIC_URL: ${{ vars.API_PUBLIC_URL }}
           WEBAPP_PUBLIC_URL: ${{ vars.WEBAPP_PUBLIC_URL }}
 

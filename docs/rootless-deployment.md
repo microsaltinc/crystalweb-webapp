@@ -1,12 +1,12 @@
 # Rootless deployment accounts
 
 Each hosted environment uses one Linux account, SSH key and rootless Docker daemon
-per repository. The currently provisioned VPS belongs to development.
+per repository. Development and production run on separate VPS hosts.
 The backend account is `cicd-user`; the webapp account is `cicd-webapp`. Neither
 account has sudo permission or belongs to the `docker` group. Their home and
 release directories have mode `0700`. Each repository's matching GitHub environment
-contains only its own account's SSH key. Provision separate keys for the future
-production VPS. Keep administrator keys out of GitHub.
+contains only its own account's SSH key. Development and production use separate
+keys even when their Linux account names match. Keep administrator keys out of GitHub.
 
 The separate accounts prevent a webapp deployment from reading backend credentials,
 mounting its image storage or controlling its containers. This is filesystem and

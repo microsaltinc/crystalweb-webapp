@@ -27,6 +27,5 @@ ssh "${ssh_options[@]}" "$destination" \
   < "$temporary/bundle.tar.gz"
 printf '%s' "$GHCR_TOKEN" | ssh "${ssh_options[@]}" "$destination" \
   "bash '$release/scripts/activate-release.sh' '$VPS_PATH' '$GHCR_USER'"
-curl --fail --silent --show-error --retry 5 --retry-delay 3 \
-  "${WEBAPP_PUBLIC_URL}/healthz" > /dev/null
+python3 scripts/verify-deployment-https.py "${WEBAPP_PUBLIC_URL}/healthz"
 printf '%s\n' "$SERVICE deployed at revision $SOURCE_REVISION"

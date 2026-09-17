@@ -33,6 +33,7 @@ def origin(name):
 
 
 def prepare(destination):
+    match("VERIFY_PUBLIC_DNS", r"true|false", "true")
     match("VPS_HOST", r"[A-Za-z0-9][A-Za-z0-9.:-]*")
     if match("VPS_USER", r"[a-z_][a-z0-9_-]*") == "root":
         raise ValueError("VPS_USER must be an unprivileged deployment account")

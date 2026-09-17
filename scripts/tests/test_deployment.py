@@ -100,6 +100,7 @@ class DeploymentBundleTests(unittest.TestCase):
 
     def test_rejects_shell_injection_and_invalid_public_configuration(self):
         for name, value in (
+            ("VERIFY_PUBLIC_DNS", "yes"),
             ("DEPLOYMENT_ENVIRONMENT", "local"),
             ("VPS_PATH", "/srv/app;touch /tmp/injected"),
             ("VPS_PATH", "/"),

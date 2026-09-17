@@ -35,6 +35,7 @@ The configuration job supplies its public settings to the image build:
 | `API_PUBLIC_URL` | Real HTTPS API origin, e.g. `https://api.your-domain.com`, without trailing slash or path |
 | `WEBAPP_PUBLIC_URL` | Real HTTPS webapp origin, e.g. `https://crystal.your-domain.com`, without trailing slash or path |
 | `DEPLOY_ENABLED` | Set to `true` only after the VPS, DNS, TLS and secrets are ready; absent means build/publish only |
+| `VERIFY_PUBLIC_DNS` | Default `true`; set `false` only to stage the new VPS before DNS cutover; direct VPS HTTPS validation remains required |
 | `VPS_PORT` | SSH port; default `22` |
 | `VPS_PATH` | Absolute service directory; default `/srv/crystalweb-webapp` |
 | `SERVICE_PORT` | Loopback HTTP port; default `3000` |
@@ -67,7 +68,11 @@ Install the example `deploy/host-nginx.conf.example` in the host nginx http
 configuration, replacing domains and certificate paths. Match its proxy port to
 `SERVICE_PORT`, validate with `nginx -t`, and reload nginx. Expose HTTPS and your
 SSH port; keep the service ports on loopback. DNS must resolve to the corresponding
-VPS before running the workflow's public health check.
+VPS for the public health check. Actions first checks the deployed VPS directly
+using the configured hostname and its trusted TLS certificate. For an initial
+migration, set `VERIFY_PUBLIC_DNS=false` in the environment to defer only the
+public DNS check while verifying the new VPS before cutover. Restore `true`
+(the default) after cutover.
 
 The webapp's static nginx server listens on `127.0.0.1:3000` by default.
 It has no database, uploaded data, runtime credentials or API reverse proxy.
