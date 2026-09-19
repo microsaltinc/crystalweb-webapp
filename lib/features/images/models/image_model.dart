@@ -230,9 +230,26 @@ class ImageModel {
   String get displayLabel => 'Bag $bagNumber / Image $imageNumber';
 
   bool get isComplete => processingStatus == 'complete';
-  bool get isProcessing => processingStatus == 'processing';
-  bool get isFailed => processingStatus == 'failed';
-  bool get isPending => processingStatus == 'pending';
+  bool get isProcessing => const {
+    'processing',
+    'analyzing',
+    'downloading',
+  }.contains(processingStatus);
+  bool get isFailed => const {'failed', 'error'}.contains(processingStatus);
+  bool get isPending =>
+      const {'pending', 'retry_pending', 'retrying'}.contains(processingStatus);
+  bool get isAnalysisActive => isProcessing || isPending;
+  String get analysisLabel => isComplete
+      ? 'Analysis complete'
+      : isProcessing
+      ? 'Analyzing'
+      : isPending
+      ? 'Queued for analysis'
+      : isFailed
+      ? 'Analysis failed'
+      : processingStatus == 'awaiting_upload'
+      ? 'Awaiting upload'
+      : 'Analysis incomplete';
 
   /// Whether a displayable image is available.
   bool get hasCroppedImage =>

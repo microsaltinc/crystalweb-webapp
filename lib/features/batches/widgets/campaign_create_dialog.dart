@@ -60,8 +60,8 @@ class _CampaignCreateDialogState extends ConsumerState<CampaignCreateDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Create a server-owned Campaign, Sublot A, and Bag 1. '
-                  'Microscope TIFF/TXT files are uploaded directly from the browser.',
+                  'Start with Sublot A and Bag 1. You can add more later. '
+                  'Upload matching microscope TIFF and TXT files after creating your campaign or experiment.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
@@ -190,7 +190,11 @@ class _CampaignCreateDialogState extends ConsumerState<CampaignCreateDialog> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.add),
-          label: Text(_submitting ? 'Creating…' : 'Create destination'),
+          label: Text(
+            _submitting
+                ? 'Creating…'
+                : (_rnd ? 'Create experiment' : 'Create campaign'),
+          ),
         ),
       ],
     );
@@ -308,7 +312,7 @@ class _DestinationPreview extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.cloud_outlined),
-        title: const Text('Direct-upload destination'),
+        title: const Text('Starting structure'),
         subtitle: Text(
           lot == null
               ? 'Select a dryer to preview the Campaign.'

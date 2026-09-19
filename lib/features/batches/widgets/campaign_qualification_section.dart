@@ -10,9 +10,13 @@ class CampaignQualificationSection extends ConsumerWidget {
     super.key,
     required this.batchId,
     required this.readOnly,
+    this.showBags = true,
+    this.experiment = false,
   });
   final String batchId;
   final bool readOnly;
+  final bool showBags;
+  final bool experiment;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,7 +34,7 @@ class CampaignQualificationSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Campaign Qualification',
+                experiment ? 'Experiment decision' : 'Campaign decision',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
@@ -45,11 +49,12 @@ class CampaignQualificationSection extends ConsumerWidget {
                 Text(
                   '${qualification.pendingBagIds.length} Bag decision(s) still pending.',
                 ),
-              _QualificationSublotList(
-                batchId: batchId,
-                qualification: qualification,
-                readOnly: readOnly,
-              ),
+              if (showBags)
+                _QualificationSublotList(
+                  batchId: batchId,
+                  qualification: qualification,
+                  readOnly: readOnly,
+                ),
               if (!readOnly && !qualification.isLocked)
                 Wrap(
                   spacing: 8,
@@ -677,5 +682,174 @@ class _BagCard extends ConsumerWidget {
       ),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => notes.dispose());
+  }
+}
+
+/// Bag decisions share the existing mutation and rejection-reason dialogs.
+class CampaignBagDecision extends ConsumerWidget {
+  const CampaignBagDecision({
+    super.key,
+    required this.qualification,
+    required this.bag,
+    required this.readOnly,
+  });
+  final CampaignQualification qualification;
+  final BagQualification bag;
+  final bool readOnly;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locked = readOnly || qualification.isLocked;
+    final actions = _BagCard(
+      batchId: qualification.batchId,
+      bag: bag,
+      qualification: qualification,
+      readOnly: locked,
+    );
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bag decision: ${bag.status.label}',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            if (bag.reason != null) Text(bag.reason!.label),
+            if (bag.notes?.isNotEmpty == true) Text(bag.notes!),
+            if (!bag.operatorReviewed &&
+                bag.status != BagQualificationStatus.accepted)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Acceptance requires at least one non-discarded annotation created by an operator. Completing image review is a separate step.',
+                ),
+              ),
+            if (locked)
+              const Text('Read-only while locked.')
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton(
+                    onPressed:
+                        bag.operatorReviewed &&
+                            bag.status != BagQualificationStatus.accepted
+                        ? () => actions._decide(
+                            context,
+                            ref,
+                            BagQualificationStatus.accepted,
+                          )
+                        : null,
+                    child: const Text('Accept bag'),
+                  ),
+                  TextButton(
+                    onPressed: () => actions._reject(context, ref),
+                    child: const Text('Reject & exclude'),
+                  ),
+                  if (bag.status != BagQualificationStatus.pendingReview)
+                    TextButton(
+                      onPressed: () => actions._decide(
+                        context,
+                        ref,
+                        BagQualificationStatus.pendingReview,
+                      ),
+                      child: const Text('Return to pending'),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SublotAcceptEligible extends ConsumerStatefulWidget {
+  const SublotAcceptEligible({
+    super.key,
+    required this.qualification,
+    required this.sublotId,
+    required this.readOnly,
+  });
+  final CampaignQualification qualification;
+  final String sublotId;
+  final bool readOnly;
+  @override
+  ConsumerState<SublotAcceptEligible> createState() =>
+      _SublotAcceptEligibleState();
+}
+
+class _SublotAcceptEligibleState extends ConsumerState<SublotAcceptEligible> {
+  bool busy = false;
+  @override
+  Widget build(BuildContext context) {
+    final bags = widget.qualification.allBags
+        .where((b) => b.sublotId == widget.sublotId)
+        .toList();
+    final eligible = bags
+        .where(
+          (b) =>
+              b.operatorReviewed && b.status != BagQualificationStatus.accepted,
+        )
+        .toList();
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.done_all),
+      label: Text(
+        busy ? 'Accepting…' : 'Accept eligible bags (${eligible.length})',
+      ),
+      onPressed:
+          busy ||
+              widget.readOnly ||
+              widget.qualification.isLocked ||
+              eligible.isEmpty
+          ? null
+          : () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Accept eligible bags?'),
+                  content: Text(
+                    'Accept Bags ${eligible.map((b) => b.number).join(', ')}.\n${bags.where((b) => !b.operatorReviewed).length} bags without operator annotations will be skipped. Already accepted bags stay accepted.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: Text('Accept ${eligible.length} bags'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed != true || !mounted) return;
+              setState(() => busy = true);
+              try {
+                await ref
+                    .read(campaignQualificationActionsProvider)
+                    .acceptOperatorReviewedBags(
+                      widget.qualification.batchId,
+                      widget.sublotId,
+                      editStateVersion: widget.qualification.editStateVersion,
+                      contentRevision: widget.qualification.contentRevision,
+                    );
+              } catch (error) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        userFacingError(error, action: 'accept eligible bags'),
+                      ),
+                    ),
+                  );
+                }
+              } finally {
+                if (mounted) setState(() => busy = false);
+              }
+            },
+    );
   }
 }

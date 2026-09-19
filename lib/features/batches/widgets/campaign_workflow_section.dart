@@ -77,14 +77,16 @@ class CampaignWorkflowSection extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Row(
+  Widget build(BuildContext context, WidgetRef ref) => Wrap(
+    crossAxisAlignment: WrapCrossAlignment.center,
+    spacing: 8,
+    runSpacing: 4,
     children: [
       const Text('Workflow: '),
       CampaignWorkflowStatusChip(
         label: batch.workflowStatusLabel,
         colorToken: batch.workflowStatusColor,
       ),
-      const SizedBox(width: 8),
       OutlinedButton(
         onPressed: batch.isLocked ? null : () => _change(context, ref),
         child: const Text('Change'),

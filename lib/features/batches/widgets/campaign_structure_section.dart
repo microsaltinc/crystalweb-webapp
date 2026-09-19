@@ -714,3 +714,203 @@ class _EditBagDialogState extends State<_EditBagDialog> {
     ],
   );
 }
+
+/// Reuses the version-checked structure dialogs in the contextual workspace.
+class CampaignStructureControls extends ConsumerWidget {
+  const CampaignStructureControls({
+    super.key,
+    required this.structure,
+    this.sublot,
+    this.bag,
+    this.readOnly = false,
+  });
+  final CampaignStructure structure;
+  final CampaignSublot? sublot;
+  final CampaignBag? bag;
+  final bool readOnly;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (readOnly || structure.isLocked) return const SizedBox.shrink();
+    final actions = CampaignStructureSection(
+      batchId: structure.batchId,
+      readOnly: false,
+    );
+    final target = bag != null
+        ? 'Bag ${bag!.number}'
+        : sublot != null
+        ? 'Sublot ${sublot!.identifier}'
+        : 'Campaign';
+    Future<void> remove() async {
+      final delete =
+          bag?.capabilities.canDelete ?? sublot!.capabilities.canDelete;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('${delete ? 'Delete' : 'Archive'} $target?'),
+          content: Text(
+            delete
+                ? 'This empty item has no history and will be permanently deleted.'
+                : 'This item will leave the active workspace. Its files and history are retained, and it can be restored.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(delete ? 'Delete' : 'Archive'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+      if (bag != null) {
+        await actions._removeBag(context, ref, structure, bag!);
+      } else {
+        await actions._removeSublot(context, ref, structure, sublot!);
+      }
+    }
+
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 4,
+      children: [
+        if (bag == null)
+          TextButton.icon(
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(sublot == null ? 'Add sublot' : 'Add bag'),
+            onPressed: () => sublot == null
+                ? actions._addSublot(context, ref, structure)
+                : actions._addBag(context, ref, structure, sublot!),
+          ),
+        PopupMenuButton<String>(
+          tooltip: '$target actions',
+          onSelected: (value) async {
+            switch (value) {
+              case 'edit':
+                if (bag != null) {
+                  await actions._editBag(context, ref, structure, bag!);
+                } else if (sublot != null) {
+                  await actions._editSublot(context, ref, structure, sublot!);
+                } else {
+                  await actions._editLot(context, ref, structure);
+                }
+              case 'remove':
+                await remove();
+              case 'source':
+                await showDialog<void>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text('$target details'),
+                    content: SelectableText(
+                      bag != null
+                          ? 'Current bag: ${bag!.number}\nSource bag: ${bag!.sourceNumber}\n${bag!.notes ?? ''}'
+                          : 'Current sublot: ${sublot!.identifier}\nSource sublot: ${sublot!.sourceIdentifier}\n${sublot!.notes ?? ''}',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+            }
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'edit',
+              child: Text(
+                bag != null
+                    ? 'Edit or move bag'
+                    : sublot != null
+                    ? 'Rename sublot'
+                    : 'Edit lot code',
+              ),
+            ),
+            if (bag != null || sublot != null)
+              const PopupMenuItem(
+                value: 'source',
+                child: Text('Source details'),
+              ),
+            if (bag != null || sublot != null)
+              PopupMenuItem(
+                value: 'remove',
+                enabled: bag != null
+                    ? bag!.capabilities.canDelete ||
+                          bag!.capabilities.canArchive
+                    : sublot!.capabilities.canDelete ||
+                          sublot!.capabilities.canArchive,
+                child: Text(
+                  (bag?.capabilities.canDelete ??
+                          sublot!.capabilities.canDelete)
+                      ? 'Delete empty item'
+                      : 'Archive',
+                ),
+              ),
+          ],
+          child: const Padding(
+            padding: EdgeInsets.all(10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Actions'),
+                SizedBox(width: 4),
+                Icon(Icons.more_horiz, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class CampaignArchivePanel extends ConsumerWidget {
+  const CampaignArchivePanel({
+    super.key,
+    required this.structure,
+    required this.readOnly,
+  });
+  final CampaignStructure structure;
+  final bool readOnly;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final actions = CampaignStructureSection(
+      batchId: structure.batchId,
+      readOnly: readOnly,
+    );
+    final editable = !readOnly && !structure.isLocked;
+    return ExpansionTile(
+      title: Text(
+        'Archived items (${structure.archivedSublots.length + structure.archivedBags.length})',
+      ),
+      subtitle: const Text('Archived items retain their files and history.'),
+      children: [
+        for (final sublot in structure.archivedSublots)
+          ListTile(
+            title: Text('Sublot ${sublot.identifier}'),
+            trailing: TextButton(
+              onPressed: editable && sublot.capabilities.canRestore
+                  ? () =>
+                        actions._restoreSublot(context, ref, structure, sublot)
+                  : null,
+              child: const Text('Restore'),
+            ),
+          ),
+        for (final bag in structure.archivedBags)
+          ListTile(
+            title: Text('Bag ${bag.number}'),
+            trailing: TextButton(
+              onPressed: editable && bag.capabilities.canRestore
+                  ? () => actions._restoreBag(context, ref, structure, bag)
+                  : null,
+              child: const Text('Restore'),
+            ),
+          ),
+      ],
+    );
+  }
+}

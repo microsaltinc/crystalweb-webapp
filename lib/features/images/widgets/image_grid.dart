@@ -105,8 +105,10 @@ class ImageGrid extends StatelessWidget {
     this.onRevalidate,
     this.relocationDestinations = const [],
     this.onRelocate,
+    this.thumbnailWidth = 220,
   });
 
+  final double thumbnailWidth;
   final List<ImageModel> images;
   final ValueChanged<ImageModel> onImageTap;
   final String? lotCode;
@@ -131,7 +133,7 @@ class ImageGrid extends StatelessWidget {
     if (images.isEmpty && invalidatedImages.isEmpty) {
       return Center(
         child: Text(
-          'No images in this campaign',
+          'No images match this view',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.outline,
           ),
@@ -170,6 +172,7 @@ class ImageGrid extends StatelessWidget {
               onInvalidate: onInvalidate,
               relocationDestinations: relocationDestinations,
               onRelocate: onRelocate,
+              thumbnailWidth: thumbnailWidth,
             );
           },
         ),
@@ -196,8 +199,10 @@ class _SublotSection extends StatelessWidget {
     this.onInvalidate,
     required this.relocationDestinations,
     this.onRelocate,
+    this.thumbnailWidth = 220,
   });
 
+  final double thumbnailWidth;
   final String letter;
   final String? lotCode;
   final List<ImageModel> images;
@@ -216,7 +221,7 @@ class _SublotSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
-            lotCode != null ? 'Sublot/Bag $lotCode$letter' : 'Sublot $letter',
+            'Sublot $letter',
             style: theme.textTheme.titleSmall?.copyWith(
               color: theme.colorScheme.primary,
             ),
@@ -224,11 +229,9 @@ class _SublotSection extends StatelessWidget {
         ),
         LayoutBuilder(
           builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth > 800
-                ? 6
-                : constraints.maxWidth > 500
-                ? 4
-                : 3;
+            final crossAxisCount = (constraints.maxWidth / thumbnailWidth)
+                .floor()
+                .clamp(1, 8);
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -277,9 +280,12 @@ class _ImageThumbnail extends StatelessWidget {
   Color _statusColor(String status) {
     switch (status) {
       case 'processing':
+      case 'analyzing':
+      case 'downloading':
         return AppColors.statusProcessing;
       case 'complete':
         return AppColors.statusComplete;
+      case 'error':
       case 'failed':
         return AppColors.statusFailed;
       default:
@@ -290,9 +296,12 @@ class _ImageThumbnail extends StatelessWidget {
   IconData _statusIcon(String status) {
     switch (status) {
       case 'processing':
+      case 'analyzing':
+      case 'downloading':
         return Icons.hourglass_bottom;
       case 'complete':
         return Icons.check_circle;
+      case 'error':
       case 'failed':
         return Icons.error;
       default:
@@ -318,7 +327,7 @@ class _ImageThumbnail extends StatelessWidget {
             if (image.hasThumbnail || image.hasCroppedImage)
               CachedNetworkImage(
                 imageUrl: image.thumbnailUrl ?? image.croppedImageUrl!,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 placeholder: (context, url) =>
                     _PlaceholderContent(image: image),
                 errorWidget: (context, url, error) =>
@@ -329,7 +338,9 @@ class _ImageThumbnail extends StatelessWidget {
             Positioned(
               bottom: 24,
               left: 4,
-              child: ImageReviewStatus(image: image, showActions: false),
+              child: image.isComplete
+                  ? ImageReviewStatus(image: image, showActions: false)
+                  : Chip(label: Text(image.analysisLabel)),
             ),
             // Status icon (top-right)
             Positioned(
@@ -337,6 +348,7 @@ class _ImageThumbnail extends StatelessWidget {
               right: 4,
               child: Icon(
                 _statusIcon(image.processingStatus),
+                semanticLabel: image.analysisLabel,
                 size: 16,
                 color: statusColor,
               ),
@@ -631,7 +643,7 @@ class _DiscardedThumbnail extends StatelessWidget {
             child: image.hasThumbnail || image.hasCroppedImage
                 ? CachedNetworkImage(
                     imageUrl: image.thumbnailUrl ?? image.croppedImageUrl!,
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
                     placeholder: (context, url) =>
                         _PlaceholderContent(image: image),
                     errorWidget: (context, url, error) =>
