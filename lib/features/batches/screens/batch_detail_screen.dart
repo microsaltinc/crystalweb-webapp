@@ -487,9 +487,18 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                               ? 'Some images need attention. Open a failed image to inspect it and retry analysis.'
                               : activeImages.any((i) => i.isAnalysisActive)
                               ? 'Analysis is running. You can keep working while the queue progresses.'
+                              : activeImages.any(
+                                  (i) =>
+                                      i.processingStatus == 'awaiting_upload',
+                                )
+                              ? 'Some image entries are still awaiting upload. Check microscope files before reviewing.'
                               : activeImages.isEmpty
                               ? 'Start by uploading matching microscope TIFF and TXT files to a bag.'
-                              : 'Image reviews are complete in this scope. Check bag decisions and campaign completion.',
+                              : activeImages.every(
+                                  (i) => i.isComplete && i.reviewComplete,
+                                )
+                              ? 'Image reviews are complete in this scope. Check bag decisions and campaign completion.'
+                              : 'Some images are not ready for review. Open an image to check its status.',
                           label: !batch.isLocked && nextImage != null
                               ? 'Review next image'
                               : null,
@@ -887,6 +896,9 @@ class _AnalysisSummary extends StatelessWidget {
     final analyzing = images.where((i) => i.isProcessing).length;
     final queued = images.where((i) => i.isPending).length;
     final failed = images.where((i) => i.isFailed).length;
+    final awaitingUpload = images
+        .where((i) => i.processingStatus == 'awaiting_upload')
+        .length;
     return Wrap(
       spacing: 16,
       runSpacing: 4,
@@ -894,6 +906,7 @@ class _AnalysisSummary extends StatelessWidget {
         Text('Analysis: $ready/${images.length} ready'),
         if (analyzing > 0) Text('$analyzing analyzing'),
         if (queued > 0) Text('$queued queued'),
+        if (awaitingUpload > 0) Text('$awaitingUpload awaiting upload'),
         if (failed > 0)
           Text(
             '$failed failed',

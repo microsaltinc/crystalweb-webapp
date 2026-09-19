@@ -312,7 +312,8 @@ instruction changes. Keep the user informed during implementation.
 - Browser inspection found that the next-review action used API return order.
   It now follows sublot, bag and image-number order, matching the gallery. A
   navigation regression test covers an intentionally unordered API response;
-  all eight workspace tests pass after that correction.
+  all nine workspace tests pass after that correction and a pending-upload
+  regression check. Awaiting-upload entries never imply completed human review.
 - Qualification/locking rules and production services were not changed. No
   production tags or workflows were triggered. Screenshots and raw test artifacts
   remain outside Git.

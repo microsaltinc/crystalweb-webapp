@@ -320,4 +320,19 @@ void main() {
     expect(find.text('Reviewing image-1-2'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  testWidgets('pending uploads never imply completed image review', (
+    tester,
+  ) async {
+    await size(tester, const Size(1440, 1100));
+    await tester.pumpWidget(
+      app(loadImages: () async => [image(1, status: 'awaiting_upload')]),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('1 awaiting upload'), findsOneWidget);
+    expect(find.textContaining('still awaiting upload'), findsOneWidget);
+    expect(find.textContaining('Image reviews are complete'), findsNothing);
+    expect(find.text('Review next image'), findsNothing);
+    expect(find.byKey(const Key('workspace-upload')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
