@@ -11,6 +11,7 @@ import 'package:crystalapp/features/reports/providers/report_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 CampaignStructure structure({bool locked = false, int bags = 1}) =>
     CampaignStructure.fromJson({
@@ -70,21 +71,22 @@ CampaignQualification qualification({bool locked = false, int bags = 1}) =>
       'can_finalize_as': [],
       'finalization_blockers': [],
     });
-ImageModel image(int bag, {String status = 'complete'}) => ImageModel(
-  id: 'image-$bag',
-  batchId: 'batch',
-  bagId: 'bag-$bag',
-  sublotId: 'sub',
-  sublotLetter: 'A',
-  bagNumber: bag,
-  imageNumber: 1,
-  s3Key: 'local',
-  widthPx: 80,
-  heightPx: 64,
-  processingStatus: status,
-  crystalCount: 3,
-  createdAt: DateTime.utc(2026),
-);
+ImageModel image(int bag, {String status = 'complete', int number = 1}) =>
+    ImageModel(
+      id: 'image-$bag-$number',
+      batchId: 'batch',
+      bagId: 'bag-$bag',
+      sublotId: 'sub',
+      sublotLetter: 'A',
+      bagNumber: bag,
+      imageNumber: number,
+      s3Key: 'local',
+      widthPx: 80,
+      heightPx: 64,
+      processingStatus: status,
+      crystalCount: 3,
+      createdAt: DateTime.utc(2026),
+    );
 Widget app({
   bool locked = false,
   int bags = 1,
@@ -93,6 +95,7 @@ Widget app({
   bool qualificationError = false,
   Future<CampaignQualification> Function()? loadQualification,
   Future<CampaignStructure> Function()? loadStructure,
+  GoRouter? router,
 }) => ProviderScope(
   overrides: [
     batchDetailProvider.overrideWith(
@@ -128,12 +131,14 @@ Widget app({
     ),
     reportsForBatchProvider.overrideWith((ref, id) async => []),
   ],
-  child: MaterialApp(
-    home: BatchDetailScreen(
-      batchId: 'batch',
-      routeRoot: rnd ? '/rnd' : '/batches',
-    ),
-  ),
+  child: router != null
+      ? MaterialApp.router(routerConfig: router)
+      : MaterialApp(
+          home: BatchDetailScreen(
+            batchId: 'batch',
+            routeRoot: rnd ? '/rnd' : '/batches',
+          ),
+        ),
 );
 
 void main() {
@@ -284,4 +289,35 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+  testWidgets('next review follows gallery order within the selected bag', (
+    tester,
+  ) async {
+    await size(tester, const Size(1440, 1100));
+    final router = GoRouter(
+      initialLocation: '/batches/batch',
+      routes: [
+        GoRoute(
+          path: '/batches/batch',
+          builder: (_, _) => const BatchDetailScreen(batchId: 'batch'),
+        ),
+        GoRoute(
+          path: '/batches/batch/images/:id',
+          builder: (_, state) =>
+              Text('Reviewing ${state.pathParameters['id']}'),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      app(
+        router: router,
+        loadImages: () async => [image(1, number: 9), image(1, number: 2)],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Review next image'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reviewing image-1-2'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

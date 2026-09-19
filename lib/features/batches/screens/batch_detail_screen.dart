@@ -283,15 +283,22 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
               s.id == selectedBag?.bag.sublotId,
         )
         .firstOrNull;
-    final visible = (images ?? <ImageModel>[])
-        .where(
-          (i) => selectedBag != null
-              ? i.bagId == selectedBag.bag.id
-              : selectedSublot != null
-              ? i.sublotId == selectedSublot.id
-              : true,
-        )
-        .toList();
+    final visible =
+        (images ?? <ImageModel>[])
+            .where(
+              (i) => selectedBag != null
+                  ? i.bagId == selectedBag.bag.id
+                  : selectedSublot != null
+                  ? i.sublotId == selectedSublot.id
+                  : true,
+            )
+            .toList()
+          ..sort((a, b) {
+            final sublot = a.sublotLetter.compareTo(b.sublotLetter);
+            if (sublot != 0) return sublot;
+            final bag = a.bagNumber.compareTo(b.bagNumber);
+            return bag != 0 ? bag : a.imageNumber.compareTo(b.imageNumber);
+          });
     final title =
         selectedBag?.label ??
         (selectedSublot != null

@@ -1,6 +1,6 @@
 # Campaign and experiment workspace redesign
 
-Status: implemented locally; development deployment and browser verification in progress.
+Status: implemented and validated in development.
 Date: 2026-09-19.
 Deployment scope: development only.
 
@@ -188,14 +188,13 @@ concurrent provider requests.
 - [x] Implement/test early backend previews separately from analysis completion.
 - [x] Run relevant Flutter tests/analyzer/build, backend tests for any backend
       change, and each repository's `scripts/audit-no-aws.py` before commits.
-- [ ] Commit/push the appropriate independent repositories. Main deploys dev;
+- [x] Commit/push the appropriate independent repositories. Main deploys dev;
       never create production tags or trigger production deployment for this task.
-- [ ] Verify GitHub workflows, dev service health, deployed UI layout and core
+- [x] Verify GitHub workflows, dev service health, deployed UI layout and core
       flows. Report precisely what was tested and any remaining limitations.
 
-Do not stop after merely building the mock: user authorized implementation and
-development deployment. Their latest instruction is to compact first and resume
-implementation from this document.
+Implementation follows the approved development-only scope. Production deployment
+is a separate decision after development review.
 
 ## Acceptance and test scenarios
 
@@ -289,3 +288,31 @@ worked. Do not print tokens or change unrelated credential configuration.
 
 No sub-agents have been authorized for this work; proceed locally unless that
 instruction changes. Keep the user informed during implementation.
+
+## Development validation (2026-09-19)
+
+- Initial development releases passed both GitHub pipelines: backend `14a3c3f`
+  (803 tests passed, 66 skipped) and webapp `12efd54` (396 widget/unit tests passed,
+  3 platform-specific skips; separate Chrome tests passed). AWS-independence audits,
+  static analysis, deployment-script checks, production builds and readiness passed.
+- Playwright CLI verified the real one-bag/16-image and eight-bag/24-image campaigns,
+  bag scope, Reports/Discussion retention, Details/completion panels, original image
+  editor with annotations, and an R&D experiment with Project context. Desktop
+  1440x1050 and phone 390x844 layouts were inspected. No page errors or failing HTTP
+  responses occurred in these checks. Existing campaigns were browsed read-only.
+- Browser validation used an isolated development test session with the login/PIN
+  handoff stubbed inside the test browser. It did not change deployed authentication
+  or validate Google SAML. API writes were blocked while browsing existing records.
+- Two explicitly labeled WORKSPACE-QA development campaigns exercised real upload,
+  finalization, preview preparation and model analysis. Persistent previews became
+  accessible after about 8 and 10 seconds, while analysis was still pending.
+  Human review remained unset. The crystal-bearing sample finished in 215 seconds
+  with 79 annotation rows; four-point geometry, pixel/physical area and diameter,
+  calibration and both preview sizes passed verification.
+- Browser inspection found that the next-review action used API return order.
+  It now follows sublot, bag and image-number order, matching the gallery. A
+  navigation regression test covers an intentionally unordered API response;
+  all eight workspace tests pass after that correction.
+- Qualification/locking rules and production services were not changed. No
+  production tags or workflows were triggered. Screenshots and raw test artifacts
+  remain outside Git.
