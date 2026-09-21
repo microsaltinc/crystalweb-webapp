@@ -13,6 +13,10 @@ mounting its image storage or controlling its containers. This is filesystem and
 process isolation on a shared kernel; it does not provide separate-machine resource
 or network isolation. Host nginx owns public TLS and proxies the two loopback ports.
 
+Keep hostname redirects and certificate renewal outside application releases; see
+[host routing and certificate renewal](host-routing.md) for the production routing
+contract, provisioning example and verification commands.
+
 ## Administrator provisioning
 
 Use an administrator only for packages, accounts, storage mounts, host nginx/TLS,
