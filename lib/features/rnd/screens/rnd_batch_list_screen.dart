@@ -87,7 +87,24 @@ class _RndBatchListScreenState extends ConsumerState<RndBatchListScreen> {
           children: [
             Icon(Icons.biotech, color: theme.colorScheme.tertiary),
             const SizedBox(width: 8),
-            const Text('R&D Experiments'),
+            const Flexible(
+              child: Text('R&D Experiments', overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 12),
+            IconButton.filled(
+              key: const Key('create-rnd-header'),
+              tooltip: 'New R&D experiment',
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final batchId = await showCampaignCreateDialog(
+                  context,
+                  mode: 'rnd',
+                );
+                if (batchId != null && context.mounted) {
+                  context.go('/rnd/$batchId');
+                }
+              },
+            ),
           ],
         ),
         actions: [
@@ -106,16 +123,6 @@ class _RndBatchListScreenState extends ConsumerState<RndBatchListScreen> {
             },
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'New R&D experiment',
-        onPressed: () async {
-          final batchId = await showCampaignCreateDialog(context, mode: 'rnd');
-          if (batchId != null && context.mounted) {
-            context.go('/rnd/$batchId');
-          }
-        },
-        child: const Icon(Icons.add),
       ),
       body: batchesAsync.when(
         data: (batches) => projectsAsync.when(
@@ -374,7 +381,7 @@ class _RndBatchTile extends StatelessWidget {
     dense: true,
     leading: Icon(Icons.biotech, color: Theme.of(context).colorScheme.tertiary),
     title: Text(
-      '${dateFormat.format(batch.createdAt.toLocal())} | ${batch.lotCode}  ${batch.formulaCode}',
+      '${dateFormat.format(batch.createdAt.toLocal())} | ${batch.identityLabel}  ${batch.formulaCode}',
       style: Theme.of(
         context,
       ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -395,9 +402,9 @@ class _RndBatchTile extends StatelessWidget {
         CampaignOwnerChip(batch: batch, compact: true),
         Semantics(
           button: true,
-          label: 'Assign Project for ${batch.lotCode}',
+          label: 'Assign Project for ${batch.identityLabel}',
           child: ActionChip(
-            tooltip: 'Assign Project for ${batch.lotCode}',
+            tooltip: 'Assign Project for ${batch.identityLabel}',
             avatar: const Icon(Icons.folder_outlined, size: 16),
             label: Text(batch.projectName ?? 'No Project'),
             onPressed: onProjectTap,

@@ -103,6 +103,7 @@ class CampaignSublot {
 class CampaignStructure {
   const CampaignStructure({
     required this.batchId,
+    this.customName,
     required this.lotCode,
     required this.sourceLotCode,
     required this.mode,
@@ -132,8 +133,9 @@ class CampaignStructure {
         .toList(growable: false);
     return CampaignStructure(
       batchId: json['batch_id'] as String,
-      lotCode: json['lot_code'] as String,
-      sourceLotCode: json['source_lot_code'] as String,
+      customName: json['custom_name'] as String?,
+      lotCode: json['lot_code'] as String? ?? '',
+      sourceLotCode: json['source_lot_code'] as String? ?? '',
       mode: json['mode'] as String,
       editState: json['edit_state'] as String,
       editStateVersion: (json['edit_state_version'] as num).toInt(),
@@ -145,6 +147,7 @@ class CampaignStructure {
     );
   }
   final String batchId;
+  final String? customName;
   final String lotCode;
   final String sourceLotCode;
   final String mode;

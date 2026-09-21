@@ -201,7 +201,7 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SelectableText(
-              'Lot: ${batch.lotCode}\nFormula: ${batch.formulaCode}\nDryer: ${batch.dryerCode}\n$_entity number: ${batch.campaignNum}\nCreated: ${batch.createdAt.toLocal()}\nID: ${batch.id}',
+              'Name: ${batch.displayName}\nLot: ${batch.lotCode.isEmpty ? 'Not provided' : batch.lotCode}\nFormula: ${batch.formulaCode}\nDryer: ${batch.dryerCode.isEmpty ? 'Not provided' : batch.dryerCode}\n$_entity number: ${batch.campaignNum ?? 'Not provided'}\nCreated: ${batch.createdAt.toLocal()}\nID: ${batch.id}',
             ),
             const SizedBox(height: 12),
             _CampaignInfoButton(batch: batch),
@@ -362,11 +362,13 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  batch.lotCode,
+                                  batch.identityLabel,
                                   style: theme.textTheme.headlineSmall,
                                 ),
                                 Text(
-                                  '${batch.formulaCode} · Dryer ${batch.dryerCode} · $_entity ${batch.campaignNum}',
+                                  batch.isCustom
+                                      ? batch.formulaCode
+                                      : '${batch.formulaCode} · Dryer ${batch.dryerCode} · $_entity ${batch.campaignNum}',
                                   style: theme.textTheme.bodyMedium,
                                 ),
                               ],
@@ -527,7 +529,7 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                           ReportSection(
                             batchId: batchId,
                             batchStatus: batch.status,
-                            lotCode: batch.lotCode,
+                            lotCode: batch.identityLabel,
                             editable: !batch.isLocked,
                             expectedEditStateVersion: batch.editStateVersion,
                           ),
@@ -729,7 +731,9 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                                                 .where((i) => i.isInvalidated)
                                                 .toList()
                                           : [],
-                                      lotCode: batch.lotCode,
+                                      lotCode: batch.isCustom
+                                          ? null
+                                          : batch.lotCode,
                                       thumbnailWidth: _thumbnailWidth,
                                       onImageTap: _openImage,
                                       relocationDestinations: destinations,
@@ -860,7 +864,7 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
       final path = await service.downloadBatchImages(
         batchId: batch.id,
         format: format,
-        lotCode: batch.lotCode,
+        lotCode: batch.referenceCode,
         campaignNum: batch.campaignNum,
       );
 
@@ -1136,10 +1140,11 @@ class _CampaignInfoButton extends StatelessWidget {
   void _showInfoPanel(BuildContext context) {
     final fields = <String, String>{
       'Campaign ID': batch.id,
-      'Lot Code': batch.lotCode,
+      if (batch.customName != null) 'Name': batch.customName!,
+      'Lot Code': batch.lotCode.isEmpty ? 'Not provided' : batch.lotCode,
       'Formula': batch.formulaCode,
-      'Dryer': batch.dryerCode,
-      'Campaign #': batch.campaignNum.toString(),
+      'Dryer': batch.dryerCode.isEmpty ? 'Not provided' : batch.dryerCode,
+      'Campaign #': batch.campaignNum?.toString() ?? 'Not provided',
       'Sublots': batch.sublotCount.toString(),
       'Images': '${batch.processedCount} / ${batch.imageCount}',
       'Status': batch.status,

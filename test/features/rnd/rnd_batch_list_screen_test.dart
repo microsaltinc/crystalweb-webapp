@@ -52,6 +52,14 @@ void main() {
       findsOneWidget,
     );
     expect(find.byTooltip('New R&D experiment'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byKey(const Key('create-rnd-header')),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets(

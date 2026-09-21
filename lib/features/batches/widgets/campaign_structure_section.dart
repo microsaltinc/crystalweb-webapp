@@ -118,10 +118,14 @@ class CampaignStructureSection extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Lot Code: ${structure.lotCode} (source: ${structure.sourceLotCode})',
+                      structure.customName != null
+                          ? 'Name: ${structure.customName}'
+                          : 'Lot Code: ${structure.lotCode} (source: ${structure.sourceLotCode})',
                     ),
                   ),
-                  if (!readOnly && !structure.isLocked)
+                  if (!readOnly &&
+                      !structure.isLocked &&
+                      structure.customName == null)
                     IconButton(
                       tooltip: 'Edit Lot Code',
                       onPressed: () => _editLot(context, ref, structure),
@@ -203,7 +207,7 @@ class CampaignStructureSection extends ConsumerWidget {
                                         bagId: bag.id,
                                         bagNumber: bag.number,
                                         destinationLabel:
-                                            '${structure.mode == 'rnd' ? 'R&D' : 'Production'} ${structure.lotCode} › Sublot ${sublot.identifier} › Bag ${bag.number}',
+                                            '${structure.mode == 'rnd' ? 'R&D' : 'Production'} ${structure.customName ?? structure.lotCode} › Sublot ${sublot.identifier} › Bag ${bag.number}',
                                         editStateVersion:
                                             structure.editStateVersion,
                                         contentRevision:

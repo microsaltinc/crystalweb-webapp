@@ -34,6 +34,7 @@ jobs:
       - name: Browser upload, filter and assignment tests
         run: >-
           flutter test --no-pub --platform chrome
+          test/features/batches/custom_campaign_create_test.dart
           test/features/batches/campaign_assignment_dialog_test.dart
           test/features/batches/campaign_ownership_section_test.dart
           test/features/microscope_upload/microscope_file_source_web_test.dart

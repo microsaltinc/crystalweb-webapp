@@ -91,6 +91,7 @@ Widget app({
   bool locked = false,
   int bags = 1,
   bool rnd = false,
+  String? customName,
   Future<List<ImageModel>> Function()? loadImages,
   bool qualificationError = false,
   Future<CampaignQualification> Function()? loadQualification,
@@ -101,10 +102,12 @@ Widget app({
     batchDetailProvider.overrideWith(
       (ref, id) async => Batch.fromJson({
         'id': 'batch',
-        'lot_code': 'LOT',
+        'naming_mode': customName == null ? 'standard' : 'custom',
+        'custom_name': customName,
+        'lot_code': customName == null ? 'LOT' : null,
         'formula_code': 'FORMULA',
-        'dryer_code': 'E',
-        'campaign_num': 1,
+        'dryer_code': customName == null ? 'E' : null,
+        'campaign_num': customName == null ? 1 : null,
         'sublot_count': 1,
         'image_count': bags,
         'processed_count': bags,
@@ -151,6 +154,29 @@ void main() {
     });
   }
 
+  testWidgets(
+    'custom name wraps in the narrow workspace and reports remain available',
+    (tester) async {
+      await size(tester, const Size(390, 844));
+      final name = 'September drying trial ${'A' * 70}';
+      await tester.pumpWidget(app(customName: name));
+      await tester.pumpAndSettle();
+      expect(find.text(name), findsOneWidget);
+      expect(find.textContaining('Campaign null'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Reports'));
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Reports'));
+      await tester.pumpAndSettle();
+      await tester.drag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(0, -400),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Bag Reports'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets(
     'single bag opens images with clear states and acceptance prerequisite',
     (tester) async {

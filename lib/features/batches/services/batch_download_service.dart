@@ -20,12 +20,14 @@ class BatchDownloadService {
     required String batchId,
     required String format,
     required String lotCode,
-    required int campaignNum,
+    required int? campaignNum,
     ValueChanged<double>? onProgress,
   }) async {
     final endpoint = '/api/v1/batches/$batchId/download-images';
     final queryParams = {'format': format};
-    final defaultFileName = '${lotCode}_campaign${campaignNum}_$format.zip';
+    final defaultFileName = campaignNum == null
+        ? 'custom-${batchId}_$format.zip'
+        : '${lotCode}_campaign${campaignNum}_$format.zip';
     final response = await _dio.get<List<int>>(
       endpoint,
       queryParameters: queryParams,

@@ -825,9 +825,13 @@ class _MoreInfoButton extends StatelessWidget {
 
   void _showInfoPanel(BuildContext context) {
     final sublotName = batch != null
-        ? '${batch!.lotCode}-${image.sublotLetter}'
+        ? '${batch!.identityLabel} · Sublot ${image.sublotLetter}'
         : image.sublotLetter;
-    final campaignName = batch != null ? 'Campaign ${batch!.campaignNum}' : '';
+    final campaignName = batch != null
+        ? (batch!.isCustom
+              ? batch!.identityLabel
+              : 'Campaign ${batch!.campaignNum}')
+        : '';
 
     showDialog(
       context: context,
@@ -845,7 +849,10 @@ class _MoreInfoButton extends StatelessWidget {
               secondaryLabel: 'Batch ID',
             ),
             if (batch != null) ...[
-              _InfoRow(label: 'Lot Code', value: batch!.lotCode),
+              _InfoRow(
+                label: batch!.isCustom ? 'Name' : 'Lot Code',
+                value: batch!.identityLabel,
+              ),
               _InfoRow(label: 'Campaign', value: campaignName),
             ],
             _InfoRow(
@@ -876,7 +883,8 @@ class _MoreInfoButton extends StatelessWidget {
               };
               if (batch != null) {
                 fields['Batch ID'] = batch!.id;
-                fields['Lot Code'] = batch!.lotCode;
+                fields[batch!.isCustom ? 'Name' : 'Lot Code'] =
+                    batch!.identityLabel;
                 fields['Campaign'] = campaignName;
               }
               fields['Uploaded'] = _formatDateTime(image.createdAt);

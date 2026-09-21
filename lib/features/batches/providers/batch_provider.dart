@@ -90,3 +90,26 @@ Future<Batch> createBatch(
   );
   return Batch.fromJson(response.data as Map<String, dynamic>);
 }
+
+/// Create an upload-ready record without production metadata.
+Future<Batch> createCustomBatch(
+  ApiClient client, {
+  required String formulaId,
+  required String name,
+  required String creationRequestId,
+  String mode = 'production',
+}) async {
+  final response = await client.dio.post(
+    '/api/v1/batches',
+    data: {
+      'naming_mode': 'custom',
+      'custom_name': name,
+      'formula_id': formulaId,
+      'mode': mode,
+      'creation_request_id': creationRequestId,
+      'create_placeholder_images': false,
+      'sublot_letters': ['A'],
+    },
+  );
+  return Batch.fromJson(response.data as Map<String, dynamic>);
+}

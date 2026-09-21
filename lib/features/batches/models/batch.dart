@@ -1,6 +1,8 @@
 class Batch {
   Batch({
     required this.id,
+    this.namingMode = 'standard',
+    this.customName,
     required this.lotCode,
     required this.formulaCode,
     required this.dryerCode,
@@ -61,10 +63,12 @@ class Batch {
   factory Batch.fromJson(Map<String, dynamic> json) {
     return Batch(
       id: json['id'] as String,
-      lotCode: json['lot_code'] as String,
+      namingMode: json['naming_mode'] as String? ?? 'standard',
+      customName: json['custom_name'] as String?,
+      lotCode: json['lot_code'] as String? ?? '',
       formulaCode: json['formula_code'] as String? ?? '',
       dryerCode: json['dryer_code'] as String? ?? '',
-      campaignNum: json['campaign_num'] as int? ?? 0,
+      campaignNum: json['campaign_num'] as int?,
       sublotCount: json['sublot_count'] as int? ?? 0,
       imageCount: json['image_count'] as int? ?? 0,
       processedCount: json['processed_count'] as int? ?? 0,
@@ -156,10 +160,12 @@ class Batch {
   }
 
   final String id;
+  final String namingMode;
+  final String? customName;
   final String lotCode;
   final String formulaCode;
   final String dryerCode;
-  final int campaignNum;
+  final int? campaignNum;
   final int sublotCount;
   final int imageCount;
   final int processedCount;
@@ -216,7 +222,13 @@ class Batch {
 
   bool get workflowStatusIsDone => workflowStatusKey == 'done';
 
-  String get displayName => '$lotCode $formulaCode';
+  bool get isCustom => namingMode == 'custom';
+
+  String get identityLabel => customName ?? (lotCode.isEmpty ? id : lotCode);
+
+  String get displayName => customName ?? '$lotCode $formulaCode';
+
+  String get referenceCode => isCustom ? 'custom-$id' : lotCode;
 
   bool get hasOwner => ownerOperatorId != null;
 
@@ -246,7 +258,9 @@ class Batch {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'lot_code': lotCode,
+    'naming_mode': namingMode,
+    'custom_name': customName,
+    'lot_code': lotCode.isEmpty ? null : lotCode,
     'formula_code': formulaCode,
     'dryer_code': dryerCode,
     'campaign_num': campaignNum,

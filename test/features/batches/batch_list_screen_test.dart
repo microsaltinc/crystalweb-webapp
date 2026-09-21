@@ -25,6 +25,14 @@ void main() {
       findsOneWidget,
     );
     expect(find.byTooltip('New Campaign'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byKey(const Key('create-batches-header')),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets(

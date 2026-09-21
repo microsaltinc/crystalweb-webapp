@@ -151,13 +151,13 @@ class _BatchListScreenState extends ConsumerState<BatchListScreen> {
     return ListTile(
       dense: true,
       title: Text(
-        '${_dateFormat.format(batch.createdAt.toLocal())} | ${batch.lotCode}  ${batch.formulaCode}',
+        '${_dateFormat.format(batch.createdAt.toLocal())} | ${batch.identityLabel}  ${batch.formulaCode}',
         style: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
         ),
       ),
       subtitle: Text(
-        '${batch.sublotCount} sublots | ${batch.imageCount} imgs | ${batch.crystalCount} crystals (auto: ${batch.autoCrystalCount} / op: ${batch.operatorCrystalCount}) | Dryer ${batch.dryerCode} | PO: $poLabel',
+        '${batch.sublotCount} sublots | ${batch.imageCount} imgs | ${batch.crystalCount} crystals (auto: ${batch.autoCrystalCount} / op: ${batch.operatorCrystalCount}) | ${batch.dryerCode.isEmpty ? 'Dryer: Not provided' : 'Dryer ${batch.dryerCode}'} | PO: $poLabel',
         style: theme.textTheme.bodySmall,
       ),
       trailing: Row(
@@ -220,7 +220,28 @@ class _BatchListScreenState extends ConsumerState<BatchListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Campaigns'),
+        title: Row(
+          children: [
+            const Flexible(
+              child: Text('Campaigns', overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 12),
+            IconButton.filled(
+              key: const Key('create-batches-header'),
+              tooltip: 'New Campaign',
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final batchId = await showCampaignCreateDialog(
+                  context,
+                  mode: 'production',
+                );
+                if (batchId != null && context.mounted) {
+                  context.go('/batches/$batchId');
+                }
+              },
+            ),
+          ],
+        ),
         actions: [
           if (hasActiveFilters)
             IconButton(
@@ -234,19 +255,6 @@ class _BatchListScreenState extends ConsumerState<BatchListScreen> {
             onPressed: () => ref.invalidate(batchListProvider),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'New Campaign',
-        onPressed: () async {
-          final batchId = await showCampaignCreateDialog(
-            context,
-            mode: 'production',
-          );
-          if (batchId != null && context.mounted) {
-            context.go('/batches/$batchId');
-          }
-        },
-        child: const Icon(Icons.add),
       ),
       body: batchesAsync.when(
         data: (batches) {
@@ -290,6 +298,7 @@ class _BatchListScreenState extends ConsumerState<BatchListScreen> {
           final lotCodes =
               batches
                   .map((b) => b.lotCode)
+                  .where((code) => code.isNotEmpty)
                   .where((l) => l.isNotEmpty)
                   .toSet()
                   .toList()
