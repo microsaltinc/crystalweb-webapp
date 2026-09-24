@@ -9,6 +9,7 @@ import '../../../core/api/user_facing_error.dart';
 import '../../batches/models/batch.dart';
 import '../../batches/providers/batch_provider.dart';
 import '../../batches/providers/campaign_locking_provider.dart';
+import '../../settings/providers/selected_annotation_size_provider.dart';
 import '../models/crystal.dart';
 import '../models/image_model.dart';
 import '../providers/annotation_provider.dart';
@@ -766,6 +767,7 @@ class _ImageViewerWithActionsState
       showDiscarded: widget.annotationState.showDiscarded,
       showOverlay: widget.annotationState.showOverlay,
       showNumbers: widget.annotationState.showNumbers,
+      selectedAnnotationScale: ref.watch(selectedAnnotationSizeProvider),
       onTapCrystal: widget.annotationNotifier.selectCrystal,
       onQuadChanged: widget.annotationNotifier.updateQuad,
       effectiveQuads: widget.effectiveQuads,

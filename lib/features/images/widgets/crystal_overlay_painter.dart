@@ -12,6 +12,7 @@ class CrystalOverlayPainter extends CustomPainter {
     this.showHandles = false,
     this.showNumbers = true,
     this.showDiscarded = false,
+    this.selectedAnnotationScale = 1,
     this.effectiveQuads,
     this.effectiveDiscarded,
     this.delRegionPoints = const [],
@@ -25,6 +26,8 @@ class CrystalOverlayPainter extends CustomPainter {
   final bool showNumbers;
   /// Whether to render discarded/below-threshold crystals (in red).
   final bool showDiscarded;
+  /// Multiplier for the selected outline and visible corner handles only.
+  final int selectedAnnotationScale;
   /// If provided, use these quads instead of crystal.quad (for pending edits).
   final Map<String, List<Point>>? effectiveQuads;
   /// If provided, overrides crystal.discarded for rendering.
@@ -47,7 +50,7 @@ class CrystalOverlayPainter extends CustomPainter {
       final paint = Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = isSelected ? 3.0 : 1.5;
+        ..strokeWidth = isSelected ? 1.5 * selectedAnnotationScale : 1.5;
 
       final path = Path();
       if (quad.length != 4) continue;
@@ -172,14 +175,14 @@ class CrystalOverlayPainter extends CustomPainter {
   }
 
   void _drawHandles(Canvas canvas, List<Offset> scaledPoints) {
-    const handleRadius = 1.8;
+    final handleRadius = 0.9 * selectedAnnotationScale;
     final handlePaint = Paint()
       ..color = AppColors.crystalSelected
       ..style = PaintingStyle.fill;
     final handleBorderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+      ..strokeWidth = 0.5 * selectedAnnotationScale;
 
     // Corner handles
     for (final point in scaledPoints) {
@@ -201,6 +204,7 @@ class CrystalOverlayPainter extends CustomPainter {
     return crystals != oldDelegate.crystals ||
         selectedId != oldDelegate.selectedId ||
         showHandles != oldDelegate.showHandles ||
+        selectedAnnotationScale != oldDelegate.selectedAnnotationScale ||
         effectiveQuads != oldDelegate.effectiveQuads ||
         effectiveDiscarded != oldDelegate.effectiveDiscarded ||
         delRegionPoints != oldDelegate.delRegionPoints;

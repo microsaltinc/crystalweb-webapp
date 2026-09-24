@@ -38,6 +38,12 @@ explicitly enable local auth on a local backend. Production builds disable it.
 Changing the API origin requires rebuilding the webapp. No database password,
 signing key or other runtime secret belongs in Flutter defines or client assets.
 
+In **Settings → Image editor → Selected annotation size**, choose 1×–5× to
+adjust the selected crystal's outline and corner dots. The default 1× is half
+the previous size; 2× restores that size. This display preference is saved in
+the current browser and applies to campaign and experiment images. It does not
+change annotation coordinates, measurements, or the corner drag targets.
+
 ## Verify
 
 ```sh

@@ -15,6 +15,7 @@ class ImageViewer extends StatefulWidget {
     required this.showDiscarded,
     this.showOverlay = true,
     this.showNumbers = true,
+    this.selectedAnnotationScale = 1,
     this.onTapCrystal,
     this.onQuadChanged,
     this.effectiveQuads,
@@ -38,6 +39,7 @@ class ImageViewer extends StatefulWidget {
 
   /// Whether crystal number labels are shown on the overlay.
   final bool showNumbers;
+  final int selectedAnnotationScale;
   final ValueChanged<String?>? onTapCrystal;
 
   /// Called when a crystal quad is changed via drag interaction.
@@ -181,6 +183,7 @@ class _ImageViewerState extends State<ImageViewer> {
                     effectiveDiscarded: widget.effectiveDiscarded,
                     showNumbers: widget.showNumbers,
                     showDiscarded: widget.showDiscarded,
+                    selectedAnnotationScale: widget.selectedAnnotationScale,
                     onTapCrystal: widget.onTapCrystal,
                     onQuadChanged: widget.editable
                         ? widget.onQuadChanged

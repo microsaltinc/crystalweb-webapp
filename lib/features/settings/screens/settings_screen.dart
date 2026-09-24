@@ -8,6 +8,7 @@ import '../../../core/auth/auth_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../providers/analyzer_settings_provider.dart';
 import '../widgets/campaign_workflow_settings_dialog.dart';
+import '../widgets/selected_annotation_size_setting.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -64,6 +65,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           const _MinCrystalAreaSetting(),
+          const Divider(height: 48),
+          Text('Image editor', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          const SelectedAnnotationSizeSetting(),
           const Divider(height: 48),
           Text('Connection', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),

@@ -25,6 +25,7 @@ class InteractiveCrystalOverlay extends StatefulWidget {
     this.effectiveDiscarded,
     this.showNumbers = true,
     this.showDiscarded = false,
+    this.selectedAnnotationScale = 1,
     this.onTapCrystal,
     this.onQuadChanged,
     this.onDragActiveChanged,
@@ -49,6 +50,7 @@ class InteractiveCrystalOverlay extends StatefulWidget {
 
   /// Whether to render discarded/below-threshold crystals (in red).
   final bool showDiscarded;
+  final int selectedAnnotationScale;
   final ValueChanged<String?>? onTapCrystal;
 
   /// Called when the user drags to change a quad. Passes the crystal and new quad.
@@ -88,6 +90,7 @@ class _InteractiveCrystalOverlayState extends State<InteractiveCrystalOverlay> {
   /// Position captured from onTapDown for use in onTap.
   Offset? _tapDownPos;
 
+  // Keep corners easy to grab even when their visible dots are small.
   static const double _handleHitRadius = 6.0;
 
   Crystal? get _selectedCrystal {
@@ -156,6 +159,7 @@ class _InteractiveCrystalOverlayState extends State<InteractiveCrystalOverlay> {
                   widget.onQuadChanged != null,
               showNumbers: widget.showNumbers,
               showDiscarded: widget.showDiscarded,
+              selectedAnnotationScale: widget.selectedAnnotationScale,
               effectiveQuads: widget.effectiveQuads,
               effectiveDiscarded: widget.effectiveDiscarded,
               delRegionPoints: widget.delRegionPoints,

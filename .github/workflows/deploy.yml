@@ -39,6 +39,7 @@ jobs:
           test/features/batches/campaign_ownership_section_test.dart
           test/features/microscope_upload/microscope_file_source_web_test.dart
           test/features/rnd/rnd_experiment_filter_web_test.dart
+          test/features/settings/selected_annotation_size_web_test.dart
       - run: python3 -m unittest discover -s scripts/tests -v
       - name: Verify static asset HTTP content types
         run: python3 scripts/test-static-http.py
