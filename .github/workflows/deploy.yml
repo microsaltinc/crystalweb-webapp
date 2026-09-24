@@ -31,7 +31,7 @@ jobs:
       - run: python3 scripts/audit-no-aws.py
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub
-      - name: Browser upload, filter and assignment tests
+      - name: Browser regression tests
         run: >-
           flutter test --no-pub --platform chrome
           test/features/batches/custom_campaign_create_test.dart
@@ -40,6 +40,7 @@ jobs:
           test/features/microscope_upload/microscope_file_source_web_test.dart
           test/features/rnd/rnd_experiment_filter_web_test.dart
           test/features/settings/selected_annotation_size_web_test.dart
+          test/features/reports/pdf_scroll_test.dart
       - run: python3 -m unittest discover -s scripts/tests -v
       - name: Verify static asset HTTP content types
         run: python3 scripts/test-static-http.py

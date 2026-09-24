@@ -10,6 +10,7 @@ LABEL org.opencontainers.image.revision="$SOURCE_REVISION" \
       org.crystalweb.app-env="$APP_ENV"
 WORKDIR /src/frontend
 COPY pubspec.yaml pubspec.lock ./
+COPY third_party/pdfx/ ./third_party/pdfx/
 RUN flutter pub get
 COPY . ./
 RUN test -n "$API_URL" \

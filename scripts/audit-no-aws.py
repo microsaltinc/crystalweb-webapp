@@ -43,7 +43,7 @@ for path in FORBIDDEN_PATHS:
         errors.append(f"forbidden runtime path exists: {path.relative_to(ROOT)}")
 
 # Dart and Web runtime code is inspected textually because it is not Python AST.
-for directory in (ROOT / "lib", ROOT / "web"):
+for directory in (ROOT / "lib", ROOT / "web", ROOT / "third_party"):
     if not directory.exists():
         continue
     for path in directory.rglob("*"):
@@ -58,6 +58,7 @@ manifest_paths = [
     ROOT / "pubspec.yaml", ROOT / "pubspec.lock", ROOT / "compose.yaml",
     ROOT / "compose.production.yaml", ROOT / "Dockerfile", ROOT / "docker/nginx.conf",
     *ROOT.glob(".github/workflows/*.yml"),
+    *ROOT.glob("third_party/**/pubspec.yaml"),
 ]
 package_pattern = re.compile(
     r"(?i)(?:^|[^a-z0-9_-])(boto3|botocore|s3transfer|moto|aioboto3|aiobotocore)"

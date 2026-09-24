@@ -22,7 +22,9 @@ dependencies:
   fl_chart: ^0.69.0
   url_launcher: ^6.3.0
   web: ^1.1.1
-  pdfx: ^2.6.0
+  # CRY-54: pinned viewer scroll fix; see third_party/pdfx/README.crystalweb.md.
+  pdfx:
+    path: third_party/pdfx
   package_info_plus: ^9.0.1
   crypto: ^3.0.7
   uuid: ^4.6.0
